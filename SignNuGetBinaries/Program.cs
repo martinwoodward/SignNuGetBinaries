@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Threading.Tasks;
@@ -101,7 +102,27 @@ namespace SignNuGetBinaries
                         Console.WriteLine("Building signed NuGet package " + packageName);
 
                         var signedPackageFile = Path.Combine(outputPath, packageName);
-                        ZipFile.CreateFromDirectory(target, signedPackageFile);
+                        //ZipFile giving a strange bug - shell out to 7z for now
+                        //ZipFile.CreateFromDirectory(target, signedPackageFile);
+                        ZipArchive
+                        // Hack in 7z call
+                        Process zip = new Process();
+                        zip.StartInfo.WorkingDirectory = target;
+                        zip.StartInfo.FileName = @"C:\Program Files\7-Zip\7z.exe";
+                        zip.StartInfo.UseShellExecute = false;
+                        zip.StartInfo.RedirectStandardError = false;
+                        zip.StartInfo.RedirectStandardOutput = false;
+                        zip.StartInfo.Arguments = String.Format(@"a -tzip -r {0}.zip ""{1}\*.*""", signedPackageFile, target);
+                        Console.WriteLine(@"""{0}"" {1}", zip.StartInfo.FileName, zip.StartInfo.Arguments);
+                        zip.Start();
+                        zip.WaitForExit();
+                        if (zip.ExitCode != 0)
+                        {
+                            Console.Error.WriteLine("Error: 7z returned {0}", zip.ExitCode);
+                        }
+                        zip.Close();
+                        File.Move(signedPackageFile + ".zip", signedPackageFile);
+
                     }));
                 }
             }
