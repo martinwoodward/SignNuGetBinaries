@@ -104,7 +104,6 @@ namespace SignNuGetBinaries
                         var signedPackageFile = Path.Combine(outputPath, packageName);
                         //ZipFile giving a strange bug - shell out to 7z for now
                         //ZipFile.CreateFromDirectory(target, signedPackageFile);
-                        ZipArchive
                         // Hack in 7z call
                         Process zip = new Process();
                         zip.StartInfo.WorkingDirectory = target;
@@ -131,6 +130,23 @@ namespace SignNuGetBinaries
 
             return 0;
         }
+
+
+        private static void CreateZip(string targetDirectory, string signedPackageFile)
+        {
+            using (var stream = File.Create(signedPackageFile))
+            using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: false))
+            {
+                foreach (var file in Directory.GetFiles(targetDirectory, "*", SearchOption.AllDirectories))
+                {
+                    // Remove the target directory to get the entry name
+                    var entryName = file.Substring(targetDirectory.Length).Replace('\\', '/');
+
+                    zip.CreateEntryFromFile(file, entryName, CompressionLevel.Optimal);
+                }
+            }
+        }
+
     }
 
     interface ICodeSignService
