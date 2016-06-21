@@ -106,7 +106,7 @@ namespace SignNuGetBinaries
                         //ZipFile.CreateFromDirectory(target, signedPackageFile);
                         // Hack in 7z call
                         Process zip = new Process();
-                        zip.StartInfo.WorkingDirectory = target;
+                        zip.StartInfo.WorkingDirectory = outputPath;
                         zip.StartInfo.FileName = @"C:\Program Files\7-Zip\7z.exe";
                         zip.StartInfo.UseShellExecute = false;
                         zip.StartInfo.RedirectStandardError = false;
